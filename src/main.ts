@@ -58,30 +58,46 @@ light.position.y = 3
 light.position.z = 4
 scene.add(light)
 
+type MaterialType =
+  | 'MeshStandardMaterial'
+  | 'MeshBasicMaterial'
+  | 'MeshNormalMaterial'
+  | 'MeshMatcapMaterial'
+  | 'MeshDepthMaterial'
+  | 'MeshLambertMaterial'
+  | 'MeshPhongMaterial'
+  | 'MeshToonMaterial'
+  | 'MeshPhysicalMaterial'
+
+const params = {
+  material: 'MeshStandardMaterial' as MaterialType,
+  wireframe: false,
+  flatShading: false,
+  side: 'DoubleSide' as 'FrontSide' | 'BackSide' | 'DoubleSide',
+  opacity: 1,
+  map: false,
+  color: 0xffffff,
+  specular: 0x111111,
+  alphaMap: false,
+  aoMap: false,
+  aoMapIntensity: 1,
+  displacementMap: false,
+  displacementScale: 0,
+  metalness: 0.5,
+  metalnessMap: false,
+  roughness: 0.5,
+  roughnessMap: false,
+  normalMap: false,
+  normalScale: 0.5,
+  clearcoat: 0,
+  clearcoatRoughness: 0,
+  gradientTexture: false,
+}
+
 /**
  * Objects
  */
-// const material = new THREE.MeshBasicMaterial()
-// material.map = doorColorTexture
-// material.color = new THREE.Color('#ff0000')
-// material.wireframe = true
-// material.transparent = true
-// material.opacity = 0.5
-// material.alphaMap = doorAlphaTexture
-// material.side = THREE.DoubleSide
-// material.flatShading = true
 
-// const material = new THREE.MeshNormalMaterial()
-// material.flatShading = true
-
-// const material = new THREE.MeshMatcapMaterial()
-// material.matcap = matcapTexture
-
-// const material = new THREE.MeshDepthMaterial()
-
-// const material = new THREE.MeshLambertMaterial()
-
-// const material = new THREE.MeshPhongMaterial()
 // material.shininess = 100
 // material.specular = new THREE.Color(0x1188ff)
 
@@ -126,13 +142,13 @@ scene.add(light)
 // material.alphaMap = doorAlphaTexture
 // material.clearcoat = 1
 // material.clearcoatRoughness = 0
+let initMaterial = new THREE.MeshStandardMaterial()
+initMaterial.metalness = 0.7
+initMaterial.roughness = 0.2
+initMaterial.side = THREE[params.side]
+initMaterial.envMap = environmentMapTexture
 
-const material = new THREE.MeshStandardMaterial()
-material.metalness = 0.7
-material.roughness = 0.2
-gui.add(material, 'metalness').min(0).max(1).step(0.0001)
-gui.add(material, 'roughness').min(0).max(1).step(0.0001)
-material.envMap = environmentMapTexture
+let material = initMaterial as THREE.Material
 
 const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.5, 64, 64), material)
 sphere.geometry.setAttribute(
@@ -166,6 +182,224 @@ torus.geometry.setAttribute(
 )
 torus.position.x = 1.5
 scene.add(sphere, plane, torus)
+
+gui
+  .add(params, 'material', [
+    'MeshStandardMaterial',
+    'MeshBasicMaterial',
+    'MeshNormalMaterial',
+    'MeshMatcapMaterial',
+    'MeshDepthMaterial',
+    'MeshLambertMaterial',
+    'MeshPhongMaterial',
+    'MeshToonMaterial',
+    'MeshPhysicalMaterial',
+  ])
+  .onChange(() => {
+    // conditionally add options
+    material = new THREE[params.material]()
+    if ('matcap' in material) {
+      material.matcap = matcapTexture
+    }
+    if ('wireframe' in material) {
+      material.wireframe = params.wireframe
+    }
+    material.side = THREE[params.side]
+    if ('color' in material) {
+      material.color = new THREE.Color(params.color)
+    }
+    torus.material = material
+    sphere.material = material
+    plane.material = material
+
+    if ('shininess' in material) {
+      gui.add(material, 'shininess').min(0).max(1).step(0.0001)
+    }
+
+    if ('specular' in material) {
+      material.specular = new THREE.Color(params.specular)
+    }
+
+    material.needsUpdate = true
+  })
+
+gui
+  .add(params, 'metalness')
+  .min(0)
+  .max(1)
+  .step(0.0001)
+  .onChange(() => {
+    if ('metalness' in material) {
+      material.metalness = params.metalness
+      material.needsUpdate = true
+    }
+  })
+
+gui
+  .add(params, 'roughness')
+  .min(0)
+  .max(1)
+  .step(0.0001)
+  .onChange(() => {
+    if ('roughness' in material) {
+      material.roughness = params.roughness
+      material.needsUpdate = true
+    }
+  })
+
+gui.addColor(params, 'color').onChange(() => {
+  if ('color' in material) {
+    material.color = new THREE.Color(params.color)
+  }
+})
+
+gui.addColor(params, 'specular').onChange(() => {
+  if ('specular' in material) {
+    material.specular = new THREE.Color(params.specular)
+    material.needsUpdate = true
+  }
+})
+gui.add(params, 'wireframe').onChange(() => {
+  if ('wireframe' in material) {
+    material.wireframe = params.wireframe
+  }
+})
+gui.add(params, 'flatShading').onChange(() => {
+  if ('flatShading' in material) {
+    material.flatShading = params.flatShading
+    material.needsUpdate = true
+  }
+})
+
+gui.add(params, 'aoMap').onChange(() => {
+  if ('aoMap' in material) {
+    material.aoMap = params.aoMap ? doorAmbientOcclusionTexture : null
+    material.needsUpdate = true
+  }
+})
+
+gui
+  .add(params, 'aoMapIntensity')
+  .min(0)
+  .max(1)
+  .step(0.0001)
+  .onChange(() => {
+    if ('aoMapIntensity' in material) {
+      material.aoMapIntensity = params.aoMapIntensity
+      material.needsUpdate = true
+    }
+  })
+
+gui.add(params, 'displacementMap').onChange(() => {
+  if ('displacementMap' in material) {
+    material.displacementMap = params.displacementMap ? doorHeightTexture : null
+    material.needsUpdate = true
+  }
+})
+
+gui
+  .add(params, 'displacementScale')
+  .min(0)
+  .max(1)
+  .step(0.0001)
+  .onChange(() => {
+    if ('displacementScale' in material) {
+      material.displacementScale = params.displacementScale
+    }
+  })
+
+gui.add(params, 'metalnessMap').onChange(() => {
+  if ('metalnessMap' in material) {
+    material.metalnessMap = params.metalnessMap ? doorMetalnessTexture : null
+    material.needsUpdate = true
+  }
+})
+
+gui.add(params, 'roughnessMap').onChange(() => {
+  if ('roughnessMap' in material) {
+    material.roughnessMap = params.roughnessMap ? doorRoughnessTexture : null
+    material.needsUpdate = true
+  }
+})
+
+gui.add(params, 'normalMap').onChange(() => {
+  if ('normalMap' in material) {
+    material.normalMap = params.normalMap ? doorNormalTexture : null
+    material.needsUpdate = true
+  }
+})
+
+gui
+  .add(params, 'normalScale')
+  .min(0)
+  .max(1)
+  .step(0.0001)
+  .onChange(() => {
+    if ('normalScale' in material) {
+      ;(material as THREE.MeshStandardMaterial).normalScale.set(
+        params.normalScale,
+        params.normalScale
+      )
+    }
+  })
+
+gui
+  .add(params, 'clearcoat')
+  .min(0)
+  .max(1)
+  .step(0.0001)
+  .onChange(() => {
+    if ('clearcoat' in material) {
+      material.clearcoat = params.clearcoat
+    }
+  })
+
+gui
+  .add(params, 'clearcoatRoughness')
+  .min(0)
+  .max(1)
+  .step(0.0001)
+  .onChange(() => {
+    if ('clearcoatRoughness' in material) {
+      material.clearcoatRoughness = params.clearcoatRoughness
+    }
+  })
+
+gui.add(params, 'alphaMap').onChange(() => {
+  if ('alphaMap' in material) {
+    material.alphaMap = params.alphaMap ? doorAlphaTexture : null
+    material.needsUpdate = true
+    material.transparent = params.alphaMap
+  }
+})
+gui.add(params, 'map').onChange(() => {
+  if ('map' in material) {
+    material.map = params.map ? doorColorTexture : null
+    material.needsUpdate = true
+  }
+})
+
+gui.add(params, 'gradientTexture').onChange(() => {
+  if ('gradientTexture' in material) {
+    material.gradientTexture = params.gradientTexture ? gradientTexture : null
+    material.needsUpdate = true
+  }
+})
+
+gui.add(material, 'opacity', 0, 1, 0.01).onChange(() => {
+  // need to set transparent to true for opacity to work
+  material.transparent = material.opacity < 1
+  material.transparent = material.opacity < 1
+  material.transparent = material.opacity < 1
+})
+
+gui
+  .add(params, 'side', ['FrontSide', 'BackSide', 'DoubleSide'])
+  .onChange(() => {
+    torus.material.side = THREE[params.side]
+    sphere.material.side = THREE[params.side]
+    plane.material.side = THREE[params.side]
+  })
 
 /**
  * Sizes
