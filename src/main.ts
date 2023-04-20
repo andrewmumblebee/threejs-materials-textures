@@ -34,7 +34,7 @@ const environmentMapTexture = cubeTextureLoader.load([
 ])
 
 // Canvas
-const canvas = document.querySelector('canvas.webgl')
+const canvas = document.querySelector('canvas.webgl') as HTMLCanvasElement
 
 // Scene
 const scene = new THREE.Scene()
@@ -137,14 +137,20 @@ material.envMap = environmentMapTexture
 const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.5, 64, 64), material)
 sphere.geometry.setAttribute(
   'uv2',
-  new THREE.BufferAttribute(sphere.geometry.attributes.uv.array, 2)
+  new THREE.BufferAttribute(
+    (sphere.geometry.attributes.uv as THREE.BufferAttribute).array,
+    2
+  )
 )
 sphere.position.x = -1.5
 
 const plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 100, 100), material)
 plane.geometry.setAttribute(
   'uv2',
-  new THREE.BufferAttribute(plane.geometry.attributes.uv.array, 2)
+  new THREE.BufferAttribute(
+    (plane.geometry.attributes.uv as THREE.BufferAttribute).array,
+    2
+  )
 )
 
 const torus = new THREE.Mesh(
@@ -153,7 +159,10 @@ const torus = new THREE.Mesh(
 )
 torus.geometry.setAttribute(
   'uv2',
-  new THREE.BufferAttribute(torus.geometry.attributes.uv.array, 2)
+  new THREE.BufferAttribute(
+    (torus.geometry.attributes.uv as THREE.BufferAttribute).array,
+    2
+  )
 )
 torus.position.x = 1.5
 scene.add(sphere, plane, torus)
